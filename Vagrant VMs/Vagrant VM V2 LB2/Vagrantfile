@@ -1,0 +1,68 @@
+### configuration parameters ###
+# definiert das zu verwendende Betriebssystem
+BOX_BASE = "ubuntu/xenial64"
+# definiert die Menge RAM für alle VM
+BOX_RAM_MB = "2048"
+# definiert die Anzahl CPU's für alle VM
+BOX_CPU_COUNT = "1"
+### /configuration parameters ###
+
+Vagrant.configure("2") do |config|
+  #vmname für Vagrantfile und SSH wird definiert
+  config.vm.define "apache" do |apache|
+  #Betriebssystem wird ausgesucht
+  apache.vm.box = BOX_BASE
+  #Updates werden deaktiviert
+  apache.vm.box_check_update = false
+  #Hostname wird festgelegt
+  apache.vm.hostname = "apache"
+  #Netzwerk wird definiert
+  apache.vm.network "private_network", ip: "10.10.1.11"
+  #VM wird in virtualbox gestartet
+    apache.vm.provider "virtualbox" do |vb|
+      #VM bekommt in Virtualbox auch den Namen apache
+      vb.name = "apache"
+      #VM öffnet kein Virtualbox Fenster sondern läuft im Hintergrund
+      vb.gui = false
+      #VM erhält RAM
+      vb.memory = BOX_RAM_MB
+      #VM erhält CPU's
+      vb.cpus = BOX_CPU_COUNT
+    end
+
+  apache.vm.provision "shell", inline: <<-SHELL
+     #install apache
+     apt-get update
+     apt-get install -y apache2
+     #install firewall
+     apt-get install ufw
+     #port 80 wird auf der Firewall freigegeben
+     sudo ufw allow 80/tcp
+     #die Firewall wird aktiviert
+     sudo ufw enable
+   SHELL
+  end
+
+  #vmname für Vagrantfile und SSH wird definiert
+  config.vm.define "client" do |client|
+  #Betriebssystem wird ausgesucht
+  client.vm.box = BOX_BASE
+  #Updates werden deaktiviert
+  client.vm.box_check_update = false
+  #Hostname wird festgelegt
+  client.vm.hostname = "client"
+  #Netzwerk wird definiert
+  client.vm.network "private_network", ip: "10.10.1.12"
+  #VM wird in Virtualbox gestartet
+    client.vm.provider "virtualbox" do |vb|
+      #VM bekommt in Virtualbox auch den Namen client
+      vb.name = "client"
+      #VM öffnet kein Virtualbox Fenster sondern läuft im Hintergrund
+      vb.gui = false
+      #VM erhält RAM
+      vb.memory = BOX_RAM_MB
+      #VM erhält CPU's
+      vb.cpus = BOX_CPU_COUNT
+    end
+  end
+end
