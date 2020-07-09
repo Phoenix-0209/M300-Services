@@ -1,0 +1,52 @@
+### configuration parameters ###
+# definiert das zu verwendende Betriebssystem
+BOX_BASE = "ubuntu/xenial64"
+# definiert die Menge RAM für alle VM
+BOX_RAM_MB = "2048"
+# definiert die Anzahl CPU's für alle VM
+BOX_CPU_COUNT = "1"
+### /configuration parameters ###
+
+Vagrant.configure("2") do |config|
+  #vmname für Vagrantfile und SSH wird definiert
+  config.vm.define "docker" do |docker|
+  #Betriebssystem wird ausgesucht
+  docker.vm.box = BOX_BASE
+  #Updates werden deaktiviert
+  docker.vm.box_check_update = false
+  #Hostname wird festgelegt
+  docker.vm.hostname = "docker"
+  #Netzwerk wird definiert
+  docker.vm.network "private_network", type: "dhcp"
+  #VM wird in virtualbox gestartet
+
+    docker.vm.provider "virtualbox" do |vb|
+      #VM bekommt in Virtualbox auch den Namen apache
+      vb.name = "docker"
+      #VM öffnet kein Virtualbox Fenster sondern läuft im Hintergrund
+      vb.gui = false
+      #VM erhält RAM
+      vb.memory = BOX_RAM_MB
+      #VM erhält CPU's
+      vb.cpus = BOX_CPU_COUNT
+
+      docker.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get install \
+          apt-transport-https \
+          ca-certificates \
+          curl \
+          gnupg-agent \
+          software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      sudo apt-key fingerprint 0EBFCD88
+      sudo add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable"
+      sudo apt-get update
+      sudo apt-get install docker-ce docker-ce-cli containerd.io -y
+
+       SHELL
+    end
+  end
+end
